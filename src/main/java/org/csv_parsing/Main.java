@@ -1,28 +1,66 @@
 package org.csv_parsing;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
+import com.opencsv.exceptions.CsvException;
+
+import java.io.*;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.csv.*;
+import java.util.Scanner;
 
 public class Main {
-    static File targetCSV1 = new File("CommonCSV.csv");
-    static File targetCSV2 = new File("OpenCSV.csv");
-    static List<String[]> datasetRecords = new ArrayList<>();
+
+    static List<String[]> writerRecords = new ArrayList<>();
+    static List<String[]> readerRecord1 = new ArrayList<>();
+    static List<String[]> readerRecord2 = new ArrayList<>();
 
     public static void main(String[] args) {
+        writerRecords.add(new String[] {"NrCard", "FirstName", "LastName"});
+        writerRecords.add(new String[] {"000001", "Scafaru", "Maxim"});
+        writerRecords.add(new String[] {"000002", "Kamushkin", "Petya"});
 
-        datasetRecords.add(new String[] {"NrCard", "FirstName", "LastName"});
-        datasetRecords.add(new String[] {"000001", "Scafaru", "Maxim"});
-        datasetRecords.add(new String[] {"000002", "Kamushkin", "Petya"});
+        File targetCSV1 = new File("src/main/resources/CommonCSV.csv");
+        File targetCSV2 = new File("src/main/resources/OpenCSV.csv");
+        File targetCSV3 = new File("src/main/resources/deniro.csv");
 
-        try (FileWriter writer = new FileWriter(targetCSV1)) {
-            CSVPrinter printer = new CSVPrinter(writer, CSVFormat.EXCEL);
-            printer.printRecords(datasetRecords);
+        //(1.1) Apache Commons CSV serialization routine.
+        try (var printer = new CSVPrinter(new FileWriter(targetCSV1), CSVFormat.EXCEL)) {
+            printer.printRecords(writerRecords);
         }
         catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        //(1.2) OpenCSV file.CSV serialization routine.
+        try (var printer = new CSVWriter(new FileWriter(targetCSV2))) {
+            for (var data : writerRecords) {
+                printer.writeNext(data, false);
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        //(1.3) Parsing a file.CSV with OpenCSV component.
+        try (var reader = new CSVReader(new FileReader(targetCSV3))) {
+            readerRecord1 = reader.readAll();
+        }
+        catch (IOException | CsvException e) {
+            throw new RuntimeException(e);
+        }
+
+        //(1.4) Parsing a file.CSV with Scanner class.
+        try (var reader = new Scanner(new FileReader(targetCSV3))) {
+            while (reader.hasNextLine()) {
+                String data = reader.nextLine();
+                readerRecord2.add(data.split(",(\\s)*"));
+            }
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
