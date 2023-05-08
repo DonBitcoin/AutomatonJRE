@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main {
-
+public class CSV {
+    static final String FOLDER = "src/main/resources/";
     static List<String[]> writerRecords = new ArrayList<>();
     static List<String[]> readerRecord1 = new ArrayList<>();
     static List<String[]> readerRecord2 = new ArrayList<>();
@@ -24,9 +24,9 @@ public class Main {
         writerRecords.add(new String[] {"000001", "Scafaru", "Maxim"});
         writerRecords.add(new String[] {"000002", "Kamushkin", "Petya"});
 
-        File targetCSV1 = new File("src/main/resources/CommonCSV.csv");
-        File targetCSV2 = new File("src/main/resources/OpenCSV.csv");
-        File targetCSV3 = new File("src/main/resources/deniro.csv");
+        var targetCSV1 = new File(FOLDER + "CommonCSV.csv");
+        var targetCSV2 = new File(FOLDER + "OpenCSV.csv");
+        var targetCSV3 = new File(FOLDER + "deniro.csv");
 
         //(1.1) Apache Commons CSV serialization routine.
         try (var printer = new CSVPrinter(new FileWriter(targetCSV1), CSVFormat.EXCEL)) {
