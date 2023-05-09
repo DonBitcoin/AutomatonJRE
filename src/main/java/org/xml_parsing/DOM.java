@@ -11,13 +11,14 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-public class XML {
+public class DOM {
     static final String FOLDER = "src/main/resources/";
     static DocumentBuilderFactory factory;
     static DocumentBuilder builder;
 
     public static void main(String[] args) throws ParserConfigurationException
     {
+        //[1.1] Parse a XML-file with DOM.API
         factory = DocumentBuilderFactory.newInstance();
         builder = factory.newDocumentBuilder();
 
