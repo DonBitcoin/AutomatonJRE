@@ -1,58 +1,80 @@
 package org.xml_parsing;
 
 import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 
 class CustomHandler extends DefaultHandler {
-    private LinkedHashMap<Integer, HashMap<String, String>> nodeList;
-    private HashMap<String, String> nodeTree;
-    private StringBuilder nodeValue;
-    private Integer nodeLatest;
+    private LinkedHashMap<String, LinkedHashMap<String, String>> List;
+    private StringBuilder Value = new StringBuilder();
+    private String LatestID;
 
     @Override
-    public void startDocument() { nodeList = new LinkedHashMap<>(); }
+    public void startDocument() { List = new LinkedHashMap<>(); }
 
     @Override
     public void startElement(String uri, String localName,
-                             String qName, Attributes attributes)
-    {
-        if (Objects.equals(qName, "catalog")) return;
+                             String qName, Attributes attributes) {
         if (Objects.equals(qName, "book")) {
-            nodeLatest = Integer.valueOf(attributes.getValue("#index"));
-            nodeList.put(nodeLatest, new HashMap<>());
+            LatestID = attributes.getValue("id");
+            List.put(LatestID, new LinkedHashMap<>());
         }
-        else nodeTree.put(qName, nodeValue.toString().strip());
     }
 
     @Override
     public void characters (char[] ch, int start, int length) {
-        nodeValue = (nodeValue != null) ?
-                nodeValue.append(ch, start, length):
-                new StringBuilder();
+        Value.append(ch, start, length);
     }
 
     @Override
     public void endElement (String uri, String localName, String qName) {
-        if (Objects.equals(qName, "book"))
-            nodeTree = nodeList.get(nodeLatest);
+        if (! Objects.equals(qName, "book")) {
+            // Appending new child block to <book id = LatestID> tree.
+            List.get(LatestID).put(qName, Value.toString().strip());
+            Value = new StringBuilder(); //Flushing previously gathered characters.
+        }
+    }
+
+    // Setting up getter to retrieve parsed document-object
+    public LinkedHashMap<String, LinkedHashMap<String, String>> getList() {
+        return List;
     }
 }
 
 public class SAX {
     static final String FOLDER = "src/main/resources/";
+    static SAXParserFactory factory;
+    static SAXParser parser;
+    static CustomHandler handler;
+
     public static void main(String[] args)
     {
-        try (var input = new FileInputStream(FOLDER + "books.xml")) {
+        LinkedHashMap<String, LinkedHashMap<String, String>> results;
 
+        try (var input = new FileInputStream(FOLDER + "books.xml")) {
+            factory = SAXParserFactory.newDefaultInstance();
+            parser = factory.newSAXParser();
+            handler = new CustomHandler();
+
+            parser.parse(input, handler);
+            results = handler.getList();
         }
-        catch (IOException e) {
+        catch (IOException | ParserConfigurationException | SAXException e) {
             throw new RuntimeException(e);
         }
+
+        //Printing "results"
+        results.forEach( (X, Y) -> {
+            System.out.println("Current book to be displayed : id = " + X);
+            Y.forEach( (I, J) -> System.out.printf("\t%S : %s%n", I, J));
+        });
     }
 }
