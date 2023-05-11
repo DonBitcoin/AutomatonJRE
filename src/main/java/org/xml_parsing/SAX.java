@@ -5,56 +5,44 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 
 class CustomHandler extends DefaultHandler {
-    private java.util.LinkedHashMap<Integer, ?> nodeList;
+    private LinkedHashMap<Integer, HashMap<String, String>> nodeList;
+    private HashMap<String, String> nodeTree;
     private StringBuilder nodeValue;
-    private final String BOOK = "book";
-    private final String AUTHOR = "author";
-    private final String TITLE = "title";
-    private final String GENRE = "genre";
-    private final String PRICE = "price";
-    private final String DATE = "publish_date";
-    private final String DESCRIPTION = "description";
+    private Integer nodeLatest;
 
     @Override
-    public void characters (char[] ch, int start, int length) {
-        if (nodeValue == null)
-            nodeValue = new StringBuilder();
-        else
-            nodeValue.append(ch, start, length);
-    }
-    @Override
-    public void startDocument() {
-        nodeList = new LinkedHashMap<>();
-    }
+    public void startDocument() { nodeList = new LinkedHashMap<>(); }
+
     @Override
     public void startElement(String uri, String localName,
                              String qName, Attributes attributes)
     {
-        /*TODO switch (qName) {
-            case BOOK : nodeList.put(Integer.valueOf(attributes.getValue("#index")), ); break;
-            case AUTHOR : break;
-            case TITLE : break;
-            case GENRE : break;
-            case PRICE : break;
-            case DATE : break;
-            case DESCRIPTION : break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + qName);
+        if (Objects.equals(qName, "catalog")) return;
+        if (Objects.equals(qName, "book")) {
+            nodeLatest = Integer.valueOf(attributes.getValue("#index"));
+            nodeList.put(nodeLatest, new HashMap<>());
         }
-        */
-    }
-    @Override
-    public void endElement (String uri, String localName, String qName) {
-        //TODO
+        else nodeTree.put(qName, nodeValue.toString().strip());
     }
 
-    public LinkedHashMap<Integer, ?> getNodeList() {
-        return nodeList;
+    @Override
+    public void characters (char[] ch, int start, int length) {
+        nodeValue = (nodeValue != null) ?
+                nodeValue.append(ch, start, length):
+                new StringBuilder();
     }
-};
+
+    @Override
+    public void endElement (String uri, String localName, String qName) {
+        if (Objects.equals(qName, "book"))
+            nodeTree = nodeList.get(nodeLatest);
+    }
+}
 
 public class SAX {
     static final String FOLDER = "src/main/resources/";
